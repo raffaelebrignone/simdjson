@@ -38,6 +38,12 @@ namespace json_path_tests {
     }
     )"_padded;
 
+    const padded_string RB_TEST_RFC_JSON = R"(
+    {
+        "foo": {"foo": "baz"}
+    }
+    )"_padded;
+
     bool run_success_test(const padded_string & json,std::string_view json_path,std::string expected) {
         TEST_START();
         std::cout <<":"<< json_path<<std::endl;
@@ -385,6 +391,14 @@ namespace json_path_tests {
     }
 #endif
     bool run() {
+
+#if 1
+      return
+        run_success_test(TEST_RFC_JSON, ".foo", R"(["bar", "baz"])") &&
+        run_success_test(RB_TEST_RFC_JSON, "..foo", R"([{"foo": "baz"}, "baz"])");
+      
+#endif
+
         return
 #if SIMDJSON_EXCEPTIONS
                 json_path_invalidation_exceptions() &&

@@ -65,6 +65,12 @@ public:
   /** @overload simdjson_inline simdjson_result<value> find_field(std::string_view key) & noexcept; */
   simdjson_inline simdjson_result<value> find_field(std::string_view key) && noexcept;
 
+
+  simdjson_inline simdjson_result<std::vector<value>> find_field_recursive(std::string_view key) &noexcept;
+  /** @overload simdjson_inline simdjson_result<value>* find_field(std::string_view key) & noexcept; */
+  simdjson_inline simdjson_result<std::vector<value>> find_field_recursive(std::string_view key) &&noexcept;
+  simdjson_inline void find_field_recursive_internal(std::string_view key, std::vector<value> &values) noexcept;
+
   /**
    * Look up a field by name on an object, without regard to key order.
    *

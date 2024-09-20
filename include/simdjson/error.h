@@ -40,6 +40,7 @@ enum error_code {
   NO_SUCH_FIELD,              ///< JSON field not found in object
   IO_ERROR,                   ///< Error reading a file
   INVALID_JSON_POINTER,       ///< Invalid JSON pointer syntax
+  INVALID_JSON_PATH,          ///< Invalid JSON path syntax
   INVALID_URI_FRAGMENT,       ///< Invalid URI fragment
   UNEXPECTED_ERROR,           ///< indicative of a bug in simdjson
   PARSER_IN_USE,              ///< parser is already in use.

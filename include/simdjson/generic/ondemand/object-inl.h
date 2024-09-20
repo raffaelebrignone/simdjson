@@ -57,6 +57,27 @@ simdjson_inline simdjson_result<value> object::find_field(const std::string_view
   }
   return value(iter.child());
 }
+simdjson_inline simdjson_result<std::vector<value>> object::find_field_recursive(const std::string_view key) & noexcept {
+  std::vector<value> values;
+  find_field_recursive_internal(key, values);
+  return values;
+}
+simdjson_inline simdjson_result<std::vector<value>> object::find_field_recursive(const std::string_view key) &&noexcept {
+  std::vector<value> values;
+  find_field_recursive_internal(key, values);
+  return values;
+}
+simdjson_inline void object::find_field_recursive_internal(const std::string_view key, std::vector<value> &values) noexcept {
+  for(auto f : *this){
+    if (f.unescaped_key() == key) {
+      values.emplace_back(f.value());
+    }
+    auto res = f.value().get_object();
+    if (!res.error()) {
+      res.value().find_field_recursive_internal(key, values);
+    }
+  }
+}
 
 simdjson_inline simdjson_result<object> object::start(value_iterator &iter) noexcept {
   SIMDJSON_TRY( iter.start_object().error() );
@@ -164,12 +185,56 @@ inline simdjson_result<value> object::at_pointer(std::string_view json_pointer) 
   return child;
 }
 
+//inline simdjson_result<value> object::at_path(std::string_view json_path) noexcept {
+//  auto json_pointer = json_path_to_pointer_conversion(json_path);
+//  if (json_pointer == "-1") {
+//    return INVALID_JSON_POINTER;
+//  }
+//  return at_pointer(json_pointer);
+//}
+
 inline simdjson_result<value> object::at_path(std::string_view json_path) noexcept {
-  auto json_pointer = json_path_to_pointer_conversion(json_path);
-  if (json_pointer == "-1") {
-    return INVALID_JSON_POINTER;
+  auto index = 0;
+  if (json_path.size() == 0) {
+    return INVALID_JSON_PATH;
   }
-  return at_pointer(json_pointer);
+  if (json_path[index] != '$' && json_path[index] != '.') {
+    return INVALID_JSON_PATH;
+  } else if (json_path[index] == '$') {
+    index++;
+  }
+
+  simdjson_result<value> child;
+  std::string op{""};
+  std::string filter{""};
+  std::string key{""};
+
+  if (json_path[index] == '.') {
+    op += json_path[index];
+    index++;
+    if (json_path[index] == '.' && index < json_path.size()) {
+      op += json_path[index];
+      index++;
+    } 
+    while (index < json_path.size() && json_path[index] != '.') {
+      if (json_path[index] == '[') {
+        while (json_path[index] == ']')
+          filter += json_path[index++];
+      } else {
+        key += json_path[index++];
+      }
+    }
+
+    if (op == ".") {
+      child = find_field(key);
+    } else if (op == "..") {
+      //Scan the whole DOM in search of all the matching keys.
+      auto res = find_field_recursive(key);
+      auto a = 0;
+    }
+  }
+
+  return child;
 }
 
 simdjson_inline simdjson_result<size_t> object::count_fields() & noexcept {
